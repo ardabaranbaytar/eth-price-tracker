@@ -1,16 +1,14 @@
 from flask import Flask, render_template, jsonify
 from bot.binance_client import client
-from bot.database import save_price_to_db  
-import pandas as pd
+from bot.database import save_price_to_db, create_table_if_not_exists
 from bot.price_fetcher import get_price
 from datetime import datetime
-from bot.database import create_table_if_not_exists
-create_table_if_not_exists()
-
-
-
+import pandas as pd
 
 app = Flask(__name__)
+
+# tabloyu oluştur (gerekirse)
+create_table_if_not_exists()
 
 @app.route("/")
 def index():
@@ -18,6 +16,7 @@ def index():
 
 @app.route("/api/ethprice")
 def eth_price():
+    # Binance API'den 1 dakikalık veriler çekilir
     klines = client.get_klines(symbol="ETHUSDT", interval="1m", limit=60)
 
     df = pd.DataFrame(klines, columns=[
@@ -26,7 +25,7 @@ def eth_price():
         "taker_buy_base", "taker_buy_quote", "ignore"
     ])
 
-    
+    # Zamanı formatla (UTC+3 Türkiye saati)
     df["time"] = (
         pd.to_datetime(df["open_time"], unit="ms") + pd.Timedelta(hours=3)
     ).dt.strftime("%H:%M:%S")
@@ -40,17 +39,17 @@ def eth_price():
 
 @app.route("/api/live_price")
 def live_price():
+    # Güncel fiyatı çek, timestamp oluştur
     price = get_price()
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Veritabanına kaydet
     save_price_to_db(price, timestamp)
-    return jsonify({"price": price, "timestamp": timestamp})
 
-
-
+    return jsonify({
+        "price": price,
+        "timestamp": timestamp
+    })
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-
-
