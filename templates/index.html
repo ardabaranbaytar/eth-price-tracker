@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ethereum Fiyat Grafiği</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+</head>
+<body>
+    <h1>Ethereum Canlı Fiyat Grafiği (ETH/USDT)</h1>
+<div class="chart-container">
+    <canvas id="priceChart"></canvas>
+</div>
+
+
+   <script>
+    let myChart;  // global olarak tanımla
+
+    async function drawChart() {
+        const res = await fetch("/api/ethprice");
+        const data = await res.json();
+
+        const ctx = document.getElementById("priceChart").getContext("2d");
+        myChart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: "ETH/USDT",
+                    data: data.data,
+                    borderColor: "#2e86de",
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 2,
+                    pointHoverRadius: 4
+                }]
+            },
+            options: {
+                animation: false,
+                responsive: true,
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: "Zaman (Saat:Dakika:Saniye)"
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: "Fiyat (USDT)"
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Canlı fiyat güncellemesi (her 10 saniyede bir çağrılır)
+    async function updateLivePrice() {
+        const res = await fetch("/api/live_price");
+        const data = await res.json();
+        const currentTime = data.time;
+        const currentPrice = data.price;
+
+        myChart.data.labels.push(currentTime);
+        myChart.data.datasets[0].data.push(currentPrice);
+
+        // Maksimum 60 veri tut (kayan grafik)
+        if (myChart.data.labels.length > 60) {
+            myChart.data.labels.shift();
+            myChart.data.datasets[0].data.shift();
+        }
+
+        myChart.update();
+    }
+
+    // İlk çizimi yap, sonra canlı veriyi başlat
+    drawChart().then(() => {
+        setInterval(updateLivePrice, 10000);  // her 10 saniyede bir güncelle
+    });
+</script>
+
+</body>
+</html>
