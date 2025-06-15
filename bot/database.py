@@ -1,3 +1,6 @@
+import sqlite3
+from datetime import datetime
+
 def save_price_to_db(price: float, timestamp: str):
     conn = sqlite3.connect("database/trades.db")
     c = conn.cursor()
