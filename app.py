@@ -36,17 +36,17 @@ def live_price():
     ticker = client.get_symbol_ticker(symbol="ETHUSDT")
     price = float(ticker["price"])
 
-    # ⏰ Zamanı Türkiye saatine göre al
     now = pd.Timestamp.now() + pd.Timedelta(hours=3)
-    time_str = now.strftime("%Y-%m-%d %H:%M:%S")
+    time_str = now.strftime("%H:%M:%S")
 
-    # ✅ Veritabanına kaydet
-    save_price_to_db(price, time_str)
+    # ❗ Sadece price gönder
+    save_price_to_db(price)
 
     return jsonify({
         "price": price,
-        "time": now.strftime("%H:%M:%S")
+        "time": time_str
     })
+
 
 if __name__ == "__main__":
     app.run(debug=True)
