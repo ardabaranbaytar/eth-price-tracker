@@ -36,9 +36,14 @@ def eth_price():
 
 @app.route("/api/live_price")
 def live_price():
-    price = get_price()
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    return jsonify({"price": price, "timestamp": timestamp})
+    try:
+        price = get_price()
+        time_str = datetime.now().strftime("%H:%M:%S")
+        return jsonify({"price": price, "timestamp": time_str})
+    except Exception as e:
+        print("Hata:", e)
+        return jsonify({"error": str(e)}), 500
+
 
 
 if __name__ == "__main__":
