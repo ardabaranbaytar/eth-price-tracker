@@ -33,19 +33,11 @@ def eth_price():
 
 @app.route("/api/live_price")
 def live_price():
-    ticker = client.get_symbol_ticker(symbol="ETHUSDT")
-    price = float(ticker["price"])
+    price = get_price()
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    save_price_to_db(price, timestamp)
+    return jsonify({"price": price, "timestamp": timestamp})
 
-    now = pd.Timestamp.now() + pd.Timedelta(hours=3)
-    time_str = now.strftime("%H:%M:%S")
-
-    # ❗ Sadece price gönder
-    save_price_to_db(price)
-
-    return jsonify({
-        "price": price,
-        "time": time_str
-    })
 
 
 if __name__ == "__main__":
