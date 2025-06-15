@@ -2,6 +2,8 @@ from flask import Flask, render_template, jsonify
 from bot.binance_client import client
 from bot.database import save_price_to_db  # ✅ Ekledik
 import pandas as pd
+from bot.price_fetcher import get_price
+
 
 app = Flask(__name__)
 
@@ -37,6 +39,7 @@ def live_price():
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     save_price_to_db(price, timestamp)
     return jsonify({"price": price, "timestamp": timestamp})
+
 
 
 
