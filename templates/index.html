@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <title>Ethereum Fiyat Takibi (ETH/USDT)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
-    <!-- Chart.js CDN -->
+
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Stil dosyan (varsa) -->
+    <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -21,27 +24,27 @@
     <script>
         let myChart = null;
 
-        // İlk çizim: son 60 dakikalık veriyi çeker
+        // Başlangıçta son 60 veriyi getir
         async function drawInitialChart() {
             try {
-                const response = await fetch("/api/ethprice");
-                const data = await response.json();
+                const res = await fetch("/api/ethprice");
+                const data = await res.json();
 
                 const ctx = document.getElementById("ethChart").getContext("2d");
 
                 myChart = new Chart(ctx, {
-                    type: 'line',
+                    type: "line",
                     data: {
                         labels: data.labels,
                         datasets: [{
-                            label: 'ETH/USDT',
+                            label: "ETH/USDT",
                             data: data.data,
-                            borderColor: 'rgba(46, 134, 222, 1)',
-                            backgroundColor: 'rgba(46, 134, 222, 0.1)',
+                            borderColor: "rgba(46, 134, 222, 1)",
+                            backgroundColor: "rgba(46, 134, 222, 0.1)",
                             borderWidth: 2,
                             pointRadius: 0,
-                            fill: true,
-                            tension: 0.2
+                            tension: 0.2,
+                            fill: true
                         }]
                     },
                     options: {
@@ -51,20 +54,20 @@
                             x: {
                                 title: {
                                     display: true,
-                                    text: 'Zaman (Saat:Dakika)'
+                                    text: "Zaman (Saat:Dakika)"
                                 }
                             },
                             y: {
                                 title: {
                                     display: true,
-                                    text: 'Fiyat (USDT)'
+                                    text: "Fiyat (USDT)"
                                 }
                             }
                         },
                         plugins: {
                             legend: {
                                 display: true,
-                                position: 'top'
+                                position: "top"
                             }
                         }
                     }
@@ -74,39 +77,38 @@
             }
         }
 
-      async function updateLivePrice() {
-    try {
-        if (!myChart) return;
+        // Her 10 saniyede bir yeni veriyi al
+        async function updateLivePrice() {
+            try {
+                if (!myChart) return;
 
-        const response = await fetch("/api/live_price");
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+                const res = await fetch("/api/live_price");
+                if (!res.ok) {
+                    throw new Error(`HTTP Error: ${res.status}`);
+                }
+
+                const data = await res.json();
+                const time = data.timestamp;
+                const price = data.price;
+
+                myChart.data.labels.push(time);
+                myChart.data.datasets[0].data.push(price);
+
+                if (myChart.data.labels.length > 60) {
+                    myChart.data.labels.shift();
+                    myChart.data.datasets[0].data.shift();
+                }
+
+                myChart.update();
+            } catch (error) {
+                console.error("Canlı fiyat güncellemesi hatası:", error);
+            }
         }
 
-        const data = await response.json();
-
-        const time = data.timestamp;
-        const price = data.price;
-
-        myChart.data.labels.push(time);
-        myChart.data.datasets[0].data.push(price);
-
-        if (myChart.data.labels.length > 60) {
-            myChart.data.labels.shift();
-            myChart.data.datasets[0].data.shift();
-        }
-
-        myChart.update();
-    } catch (error) {
-        console.error("Canlı fiyat güncellemesi başarısız:", error);
-    }
-}
-
-
-        // Sayfa yüklendiğinde çalışır
+        // Yüklendiğinde çiz ve canlı fiyat güncelle
         window.onload = async () => {
             await drawInitialChart();
-            setInterval(updateLivePrice, 10000);  // Her 10 saniyede bir
+            setInterval(updateLivePrice, 10000);
         };
     </script>
 </body>
