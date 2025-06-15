@@ -1,14 +1,11 @@
 from flask import Flask, render_template, jsonify
 from bot.binance_client import client
-from bot.database import save_price_to_db, create_table_if_not_exists
 from bot.price_fetcher import get_price
 from datetime import datetime
 import pandas as pd
 
 app = Flask(__name__)
 
-# tabloyu oluştur (gerekirse)
-create_table_if_not_exists()
 
 @app.route("/")
 def index():
@@ -39,17 +36,10 @@ def eth_price():
 
 @app.route("/api/live_price")
 def live_price():
-    # Güncel fiyatı çek, timestamp oluştur
     price = get_price()
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return jsonify({"price": price, "timestamp": timestamp})
 
-    # Veritabanına kaydet
-    save_price_to_db(price, timestamp)
-
-    return jsonify({
-        "price": price,
-        "timestamp": timestamp
-    })
 
 if __name__ == "__main__":
     app.run(debug=True)
