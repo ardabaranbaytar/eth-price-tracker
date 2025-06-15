@@ -4,6 +4,9 @@ from bot.database import save_price_to_db
 import pandas as pd
 from bot.price_fetcher import get_price
 from datetime import datetime
+from bot.database import create_table_if_not_exists
+create_table_if_not_exists()
+
 
 
 
