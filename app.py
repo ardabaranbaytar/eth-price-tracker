@@ -1,14 +1,13 @@
 from flask import Flask, render_template, jsonify
 from bot.binance_client import client
+from bot.database import save_price_to_db  # ✅ Ekledik
 import pandas as pd
 
 app = Flask(__name__)
 
-
 @app.route("/")
 def index():
     return render_template("index.html")
-
 
 @app.route("/api/ethprice")
 def eth_price():
@@ -20,7 +19,7 @@ def eth_price():
         "taker_buy_base", "taker_buy_quote", "ignore"
     ])
 
-    
+    # ⏰ Zamanı Türkiye saatine çeviriyoruz
     df["time"] = (
         pd.to_datetime(df["open_time"], unit="ms") + pd.Timedelta(hours=3)
     ).dt.strftime("%H:%M:%S")
@@ -32,12 +31,18 @@ def eth_price():
         "data": df["close"].tolist()
     })
 
-
 @app.route("/api/live_price")
 def live_price():
     ticker = client.get_symbol_ticker(symbol="ETHUSDT")
     price = float(ticker["price"])
-    now = pd.Timestamp.now()  
+
+    # ⏰ Zamanı Türkiye saatine göre al
+    now = pd.Timestamp.now() + pd.Timedelta(hours=3)
+    time_str = now.strftime("%Y-%m-%d %H:%M:%S")
+
+    # ✅ Veritabanına kaydet
+    save_price_to_db(price, time_str)
+
     return jsonify({
         "price": price,
         "time": now.strftime("%H:%M:%S")
@@ -45,6 +50,7 @@ def live_price():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
