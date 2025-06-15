@@ -1,8 +1,10 @@
 from flask import Flask, render_template, jsonify
 from bot.binance_client import client
-from bot.database import save_price_to_db  # ✅ Ekledik
+from bot.database import save_price_to_db  
 import pandas as pd
 from bot.price_fetcher import get_price
+from datetime import datetime
+
 
 
 app = Flask(__name__)
@@ -21,7 +23,7 @@ def eth_price():
         "taker_buy_base", "taker_buy_quote", "ignore"
     ])
 
-    # ⏰ Zamanı Türkiye saatine çeviriyoruz
+    
     df["time"] = (
         pd.to_datetime(df["open_time"], unit="ms") + pd.Timedelta(hours=3)
     ).dt.strftime("%H:%M:%S")
